@@ -22,7 +22,7 @@ library(ncdf4)
 library(dplyr)
 library(palr)# sstPal fxn
 
-# fucntion to read in files and create an evenly spaced datset
+# function to read in files and create an evenly spaced datset
 # I've chaged the function so the user supplies the x & y coordinate names
 fun <- function(x, grid, vname, x_coord, y_coord) {
   on.exit(nc_close(nc))
