@@ -1,14 +1,10 @@
-## create a map including a base-map, fishing regions in a special projection, and some points: 
-# locations of a few pacific northern fulmar colonies
 
-# define colony locations, names, and relative size (colonycex) of colony for scaled symbol
+# create dataframe with colony locations, names, and a very approximation for colony size for symbol sizing
 lats <- c(60.658, 52.570,56.02,56.585)
 lons <- c(-173.075,-171.131,-156.037, -169.591)
 colony <- c("Hall, St. Matthew", "Chagulak", "Chowiet, Semidi", "St. George, Pribilofs")
-colonycex <- c(2.5, 3, 1.9, 1.3) # very rough relative size of each colony
-
-
-#create a dataframe; makes colony a factor, specifiy later with 'as.character'
+colonycex <- c(2.5, 3, 1.9, 1.3) # very rough relative size of each colony, for map symbols
+# this makes colony a factor, specifiy later with 'as.character'
 colonies <- data.frame(colonly = colony, colonycex = colonycex, lons = lons, lats = lats,  stringsAsFactors = FALSE)
 
 ## convert to Spatial
@@ -17,7 +13,54 @@ coordinates(colonies) <- c("lons", "lats")
 proj4string(colonies) <- CRS("+init=epsg:4326")
 library(rgdal)
 
-#setwd
+#setwd("fulmar_stuff/")
 library(raster)
-shp <-shapefile("gf95_nmfs.shp")
-world <- shapefile("world_countries_boundary_file_world_2002.shp") 
+shp <-shapefile("Alaska fishery shapefiles/gf95_nmfs.shp") # some north pacific fisheries regions, mostly AK, some CA
+world <- shapefile("world/world_countries_boundary_file_world_2002.shp") # a random shapefile of world countries
+
+## remember to prject to that of the shp
+colonies <- spTransform(colonies, projection(shp))
+world <- spTransform(world, projection(shp))
+
+## this is extremely detailed
+#plot(shp, col = "grey")
+
+## much faster, if all that detail is not needed
+library(rmapshaper)
+shp_simple <- rmapshaper::ms_simplify(shp)
+
+## just the AK areas; arbitrary subset / guess, it 'looks' good... 
+## OK for plotting, questionable for spatial overlap
+ak_only <- subset(shp_simple, GF95_NMFS_ < 1000)
+library(raster)
+
+# un-sexy selection of nations to include in plot
+USA <- world[world$NAME == "United States",]
+Russia <- world[world$NAME == "Russia",]
+Canada <- world[world$NAME == "Canada",]
+
+# make a basic plot
+plot(ak_only, col = "grey77")
+plot(world, add = TRUE)
+plot(ak_only, col = "grey77", add = TRUE)
+points(colonies, pch = 16,  cex = colonies$colonycex, col = c("hotpink", "dodgerblue", "firebrick", "limegreen"))
+box()
+legend("topright", c("Chagulak","Hall, St.Matthew",  "Chowiet, Semidi", "St.George, Pribilofs"), 
+       pch = c(16, 16, 16, 16), col = c( "dodgerblue","hotpink", "firebrick", "limegreen"),
+       pt.cex = c(3, 2.5, 1.9, 1.3)) 
+colonycex <- c(2.5, 3, 1.9, 1.3)
+
+# plot with defined extent
+ex <- extent(-2640835, 1586387, 2450097, -100000)# setup plot region: extent roughly based on 'ak_only' shapefile properties
+plot(ex, type = "n", xlab=NA, ylab=NA, axes=F,xaxs='i',yaxs='i', col = "pink") 
+plot(ak_only, col = "grey90", add = TRUE)
+# add bordering country shapefiles
+plot(USA, col = "grey58", add = TRUE)
+plot(Russia, col = "grey58", add = TRUE)
+plot(Canada,col = "grey58", add = TRUE)
+plot(ak_only, col = "grey90", add = TRUE)
+points(colonies, cex = colonies$colonycex, pch = 16, col = "black")#col = c("hotpink", "dodgerblue", "firebrick", "limegreen"))
+box(tck = 0.03)
+legend("topright", c("Chagulak","Hall, St.Matthew",  "Chowiet, Semidi", "St.George, Pribilofs"), 
+       pch = c(16, 16, 16, 16), col = "black",
+       pt.cex = c(3, 2.5, 1.9, 1.3), bg = "grey88") 
