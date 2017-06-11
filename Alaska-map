@@ -1,1 +1,23 @@
-## create a map including a base-map, fishing regions in a special projection, and some points: locations of a few pacific northern fulmar colonies
+## create a map including a base-map, fishing regions in a special projection, and some points: 
+# locations of a few pacific northern fulmar colonies
+
+# define colony locations, names, and relative size (colonycex) of colony for scaled symbol
+lats <- c(60.658, 52.570,56.02,56.585)
+lons <- c(-173.075,-171.131,-156.037, -169.591)
+colony <- c("Hall, St. Matthew", "Chagulak", "Chowiet, Semidi", "St. George, Pribilofs")
+colonycex <- c(2.5, 3, 1.9, 1.3) # very rough relative size of each colony
+
+
+#create a dataframe; makes colony a factor, specifiy later with 'as.character'
+colonies <- data.frame(colonly = colony, colonycex = colonycex, lons = lons, lats = lats,  stringsAsFactors = FALSE)
+
+## convert to Spatial
+library(sp)
+coordinates(colonies) <- c("lons", "lats")
+proj4string(colonies) <- CRS("+init=epsg:4326")
+library(rgdal)
+
+#setwd
+library(raster)
+shp <-shapefile("gf95_nmfs.shp")
+world <- shapefile("world_countries_boundary_file_world_2002.shp") 
