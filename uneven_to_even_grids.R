@@ -1,26 +1,25 @@
 ######################################################################
 # extracting irregularly gridded data in a netcdf4 into a regular grid by Michael Sumner
-# used by Pam Michael on " Future phy - Bluelink" data ~ 2015 July
+# used by Pam Michael using Bluelink data ~ 
 # 
 # *** I need to get an example dataset without sharing restictions ***
-# *** I ran it on an evely spaced grid, but Temp is Kelvin, ~1 year of daily data, the plot isn't happening ***
+# *** The attached uses an evely spaced grid, but Temp is Kelvin, ~1 year of daily data, the plot isn't happening ***
 ######################################################################
 
-# list of netcdf 4 files using an uneven grid
+# list of netcdf4 files using an uneven grid
 # I will try to run it on these data tomorrow afternoon from the office
 # bluelink phytoplankton, irregular grid
-setwd("//argos-cdc/sdode-data/Product422")
-dp <- "//argos-cdc/sdode-data/Product422"
-fs <- list.files(dp, full.names = TRUE) ##
+
+# setwd("//argos-cdc/sdode-data/Product125")
+# dp <- "//argos-cdc/sdode-data/Product125"
+# fs <- list.files(dp, full.names = TRUE) ##
 
 #### but for now I'm reading in an NCEP REAN dataset to make sure the netCDF4 are up to date
-setwd("C:/Users/Pamela E.Michael/Dropbox")#Dropbox/pam_stuff/QMS/data/R Projects/NEW ENVIRON DATA/NCEP NCAR not noaa quarter")
-fs <-"X140.79.20.188.15.15.28.8.nc"  # random download ~ Indian Ocean, sst skin (NCEP Rean daily) 1948 through 1949
+fs <-"X140.79.20.188.15.15.28.8.nc"  # southern Indian Ocean, sst skin (NCEP Rean daily) 1948 through 1949
 
 library(raster)
 library(ncdf4)
 library(dplyr)
-library(palr)# sstPal fxn
 
 # function to read in files and create an evenly spaced datset
 # I've chaged the function so the user supplies the x & y coordinate names
@@ -57,19 +56,22 @@ fun <- function(x, grid, vname, x_coord, y_coord) {
 dummy <- raster(extent(15, 160, -80, -10), res = 5, crs = "+proj=longlat +ellps=WGS84")
 
 #make a raster
-# once I get into the office I can try it on bluelink
-#phy1 <- fun(fs[1], dummy, "phy", "xt_ocean", "yt_ocean") # 
+## with a series of values, such as BLUElink
+# phy1 <- fun(fs[1], dummy, "eta_t", "xt_ocean", "yt_ocean") 
 
-# for now, it is NCEP, temp=Kelvin, temporal = daily
+## plot it with a decent colorscale
+# library(palr)
+# pal <- sstPal(palette = TRUE)
+# par(mfrow = c(4,3)) # if there is a vector of dates, plot up a few
+# plot(phy1, col = pal$cols, breaks = pal$breaks, legend = FALSE) 
+
+# the attached, NCEP, temp=Kelvin, temporal = daily
 phy1 <- fun(fs, dummy, "skt", "lon", "lat") # SST in kelvin..
 
-
-# plot it
-
-library(palr)
-pal <- sstPal(palette = TRUE)
-#par(mfrow = c(4,3)) # if there is a vector of dates, plot up a few
-plot(phy1, col = pal$cols, breaks = pal$breaks, legend = FALSE) 
+# plot it using a different colorscale as Temp = K and I'm lazy
+library(colorRamps)
+cols <- matlab.like2(19) 
+plot(phy1, col = cols, legend = FALSE) # note land skin included 
 
 #if you want to save the data as a data.frame
 phy1df <-data.frame(rasterToPoints(phy1))
